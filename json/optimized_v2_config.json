@@ -1,0 +1,30 @@
+{
+  "seed": 42,
+  "primary_model": "BanglaBERT",
+  "primary_model_name": "csebuetnlp/banglabert",
+  "max_length": 128,
+  "learning_rate": 2e-05,
+  "epochs": 5,
+  "tfidf_C_per_label": {
+    "is_toxic": 4.0,
+    "implicit_toxicity": 0.5,
+    "sarcasm": 1.0,
+    "contains_profanity": 1.0,
+    "threatening": 0.5,
+    "identity_attack": 1.0,
+    "sexual_content": 1.0
+  },
+  "tfidf_weight": 0.3,
+  "transformer_weight": 0.7,
+  "selected_transformer": "BanglaBERT_seed42",
+  "validation_macro_f1": 0.5248511855025831,
+  "thresholds": {
+    "is_toxic": 0.4100000000000001,
+    "implicit_toxicity": 0.15000000000000002,
+    "sarcasm": 0.17000000000000004,
+    "contains_profanity": 0.25000000000000006,
+    "threatening": 0.17000000000000004,
+    "identity_attack": 0.36000000000000004,
+    "sexual_content": 0.26000000000000006
+  }
+}
