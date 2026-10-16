@@ -1,0 +1,286 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[final]{bubtcompetition}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+
+% =========================================================
+% PAPER INFORMATION
+% =========================================================
+
+\bubtpaperid{BNSC-026}
+
+\bubtteamname{Team Phoenix}
+
+\bubttaskname{Fine-Grained Bengali Toxicity Understanding}
+
+\bubtrunningauthor{Mithun et al.}
+
+\bubtrunningtitle{
+A Retrieval-Augmented Transformer for Bengali Toxicity Understanding
+}
+
+
+% =========================================================
+% TITLE
+% =========================================================
+
+\title{
+Team Phoenix at the BUBT Bengali NLP Safety Challenge 2026:
+A Retrieval-Augmented Transformer for Fine-Grained Bengali Toxicity Understanding
+}
+
+
+% =========================================================
+% AUTHORS
+% =========================================================
+
+\author{
+Md. Mithun Hossain \quad
+Author Two \quad
+Author Three
+\\
+Department of Computer Science and Engineering
+\\
+Bangladesh University of Business and Technology (BUBT)
+\\
+Dhaka, Bangladesh
+\\
+\texttt{mithun@bubt.edu.bd}
+}
+
+
+% =========================================================
+% DOCUMENT
+% =========================================================
+
+\begin{document}
+
+
+\maketitle
+
+\thispagestyle{bubtfirstpage}
+
+
+% =========================================================
+% ABSTRACT
+% =========================================================
+
+\begin{abstract}
+
+This paper describes our system submitted to the BUBT
+Bengali NLP Safety Challenge 2026. The competition focuses
+on fine-grained toxicity understanding in Bengali. Our
+system combines a pretrained Bengali language model with
+task-specific prediction heads and additional representation
+learning components. We describe the system architecture,
+training procedure, experimental setup, and official
+evaluation results. We further provide ablation experiments
+and error analysis to better understand the behavior of the
+proposed approach.
+
+\end{abstract}
+
+
+% =========================================================
+% INTRODUCTION
+% =========================================================
+
+\section{Introduction}
+
+The BUBT Bengali NLP Safety Challenge 2026 focuses on
+fine-grained toxicity understanding in Bengali. Participating
+teams are required to identify whether a Bengali text is toxic
+and determine how the toxicity is expressed.
+
+This system description paper presents the methodology,
+experimental configuration, results, and analysis of our
+submitted system.
+
+
+% =========================================================
+% TASK DESCRIPTION
+% =========================================================
+
+\section{Task Description}
+
+The task contains seven binary labels:
+
+\begin{itemize}
+
+    \item \texttt{is\_toxic}
+
+    \item \texttt{implicit\_toxicity}
+
+    \item \texttt{sarcasm}
+
+    \item \texttt{contains\_profanity}
+
+    \item \texttt{threatening}
+
+    \item \texttt{identity\_attack}
+
+    \item \texttt{sexual\_content}
+
+\end{itemize}
+
+
+% =========================================================
+% DATASET
+% =========================================================
+
+\section{Dataset}
+
+Table~\ref{tab:data} summarizes the dataset splits.
+
+
+
+
+% =========================================================
+% METHODOLOGY
+% =========================================================
+
+\section{Methodology}
+
+Describe the submitted system architecture in sufficient
+detail for reproducibility.
+
+
+\subsection{Text Encoder}
+
+Describe the pretrained language model, tokenizer,
+maximum sequence length, and fine-tuning strategy.
+
+
+\subsection{Prediction Layer}
+
+Describe the multilabel prediction architecture and
+activation functions.
+
+
+% =========================================================
+% TRAINING OBJECTIVE
+% =========================================================
+
+\subsection{Training Objective}
+
+We optimize the model using binary cross-entropy (BCE)
+loss for multi-label classification. Given $C$ labels,
+the training objective is defined as
+
+\begin{equation}
+\mathcal{L}_{\mathrm{BCE}}
+=
+-\frac{1}{C}
+\sum_{c=1}^{C}
+\left[
+y_c \log(p_c)
++
+(1-y_c)\log(1-p_c)
+\right].
+\label{eq:bce}
+\end{equation}
+
+Here, $y_c \in \{0,1\}$ denotes the ground-truth label
+for class $c$, while $p_c \in [0,1]$ denotes the predicted
+probability for that class.
+
+
+% =========================================================
+% EXPERIMENTAL SETUP
+% =========================================================
+
+\section{Experimental Setup}
+
+Report training hyperparameters, optimizer, learning rate,
+batch size, number of epochs, random seeds, hardware, and
+software libraries.
+
+
+% =========================================================
+% RESULTS
+% =========================================================
+
+\section{Results}
+
+\begin{table}[t]
+
+\centering
+
+\small
+
+\begin{tabular}{lc}
+
+\toprule
+
+System & Macro F1 \\
+
+\midrule
+
+Baseline & 0.XX \\
+
+Submitted System & \textbf{0.XX} \\
+
+\bottomrule
+
+\end{tabular}
+
+\caption{
+Official evaluation results.
+}
+
+\label{tab:results}
+
+\end{table}
+
+
+% =========================================================
+% ERROR ANALYSIS
+% =========================================================
+
+\section{Error Analysis}
+
+Discuss common failure patterns such as implicit toxicity,
+sarcasm, code-mixing, spelling variation, and contextual
+ambiguity.
+
+
+% =========================================================
+% LIMITATIONS
+% =========================================================
+
+\section{Limitations}
+
+Discuss limitations of the proposed system, dataset,
+evaluation procedure, and generalization capability.
+
+
+
+
+
+% =========================================================
+% CONCLUSION
+% =========================================================
+
+\section{Conclusion}
+
+Summarize the submitted system and the main findings.
+
+
+% =========================================================
+% REFERENCES
+% =========================================================
+
+\bibliographystyle{ieeetr}
+
+\bibliography{references}
+
+
+\end{document}

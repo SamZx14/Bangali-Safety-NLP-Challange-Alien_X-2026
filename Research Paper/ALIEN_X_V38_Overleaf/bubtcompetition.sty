@@ -1,0 +1,492 @@
+\NeedsTeXFormat{LaTeX2e}
+
+\ProvidesPackage{bubtcompetition}
+[2026/10/06 Bangladesh University of Business and Technology (BUBT)]
+
+
+% =========================================================
+% OPTIONS
+% =========================================================
+
+\newif\ifbubtreview
+
+\DeclareOption{review}{\bubtreviewtrue}
+\DeclareOption{final}{\bubtreviewfalse}
+
+\ExecuteOptions{final}
+\ProcessOptions\relax
+
+
+% =========================================================
+% REQUIRED PACKAGES
+% =========================================================
+
+\RequirePackage[
+    a4paper,
+    top=1.80cm,
+    bottom=2.00cm,
+    left=1.85cm,
+    right=1.85cm,
+    columnsep=0.62cm
+]{geometry}
+
+\RequirePackage{times}
+\RequirePackage{natbib}
+\RequirePackage{titlesec}
+\RequirePackage{fancyhdr}
+\RequirePackage{xcolor}
+\RequirePackage{etoolbox}
+\RequirePackage{lastpage}
+\RequirePackage{graphicx}
+\RequirePackage{microtype}
+
+
+% =========================================================
+% GENERAL TYPOGRAPHY
+% =========================================================
+
+\setlength{\parindent}{1em}
+\setlength{\parskip}{0pt}
+
+\setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
+\setlength{\floatsep}{7pt plus 2pt minus 2pt}
+\setlength{\intextsep}{7pt plus 2pt minus 2pt}
+
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{1pt}
+
+\setlength{\columnsep}{0.62cm}
+
+
+% =========================================================
+% SECTION FORMATTING
+% =========================================================
+
+\titleformat{\section}
+  {\large\bfseries}
+  {\thesection}
+  {0.5em}
+  {}
+
+\titleformat{\subsection}
+  {\normalsize\bfseries}
+  {\thesubsection}
+  {0.5em}
+  {}
+
+\titleformat{\subsubsection}
+  {\normalsize\bfseries}
+  {\thesubsubsection}
+  {0.5em}
+  {}
+
+\titlespacing*{\section}
+  {0pt}
+  {1.3ex plus .2ex}
+  {0.6ex}
+
+\titlespacing*{\subsection}
+  {0pt}
+  {1.0ex plus .2ex}
+  {0.4ex}
+
+\titlespacing*{\subsubsection}
+  {0pt}
+  {0.8ex plus .2ex}
+  {0.3ex}
+
+
+% =========================================================
+% INTERNAL COMMANDS
+% =========================================================
+
+\makeatletter
+
+
+% =========================================================
+% COMPETITION METADATA
+% =========================================================
+
+\newcommand{\bubt@paperid}{XXXX}
+
+\newcommand{\bubt@teamname}{Team Name}
+
+\newcommand{\bubt@taskname}{Competition Task}
+
+\newcommand{\bubt@runningauthor}{Author et al.}
+
+\newcommand{\bubt@runningtitle}{Short Paper Title}
+
+
+\newcommand{\bubtpaperid}[1]{%
+    \renewcommand{\bubt@paperid}{#1}%
+}
+
+\newcommand{\bubtteamname}[1]{%
+    \renewcommand{\bubt@teamname}{#1}%
+}
+
+\newcommand{\bubttaskname}[1]{%
+    \renewcommand{\bubt@taskname}{#1}%
+}
+
+\newcommand{\bubtrunningauthor}[1]{%
+    \renewcommand{\bubt@runningauthor}{#1}%
+}
+
+\newcommand{\bubtrunningtitle}[1]{%
+    \renewcommand{\bubt@runningtitle}{#1}%
+}
+
+
+% =========================================================
+% BUBT LOGO
+% =========================================================
+%
+% Expected path:
+%
+%     figures/bubt.png
+%
+% If the file is not found, the document still compiles
+% with a small BUBT placeholder.
+% =========================================================
+
+\newcommand{\bubt@logo}{%
+    \IfFileExists{figures/bubt.png}{%
+        \includegraphics[
+            width=1.45cm,
+            keepaspectratio
+        ]{figures/bubt.png}%
+    }{%
+        \fbox{%
+            \parbox[c][1.30cm][c]{1.30cm}{%
+                \centering
+                \scriptsize
+                BUBT
+            }%
+        }%
+    }%
+}
+
+
+% =========================================================
+% TITLE BLOCK
+% =========================================================
+
+\newcommand{\bubt@titleblock}{%
+
+    \begin{@twocolumnfalse}
+
+        % =================================================
+        % UNIVERSITY HEADER
+        % =================================================
+
+        \noindent
+
+        \begin{minipage}[c]{0.12\textwidth}
+
+            \raggedright
+
+            \bubt@logo
+
+        \end{minipage}
+        \hfill
+        \begin{minipage}[c]{0.72\textwidth}
+
+            \centering
+
+            {\fontsize{10.5}{12.5}\selectfont
+            \bfseries
+            Bangladesh University of Business and Technology (BUBT)
+            \par}
+
+            \vspace{2pt}
+
+            {\fontsize{9.2}{11}\selectfont
+            BUBT Research Graduate School
+            \par}
+
+        \end{minipage}
+        \hfill
+        \begin{minipage}[c]{0.12\textwidth}
+
+            \raggedleft
+
+            \ifbubtreview
+
+                {\fontsize{8}{9.5}\selectfont
+                \textbf{Paper ID}\\[1pt]
+                \bubt@paperid}
+
+            \else
+
+                \mbox{}
+
+            \fi
+
+        \end{minipage}
+
+
+        \par
+        \vspace{5pt}
+
+
+        % =================================================
+        % SEPARATOR
+        % =================================================
+
+        \hrule height 0.45pt
+
+        \vspace{10pt}
+
+
+        % =================================================
+        % PAPER TITLE
+        % =================================================
+
+        \begin{center}
+
+            {\fontsize{15}{17.5}\selectfont
+            \bfseries
+            \@title
+            \par}
+
+            \vspace{8pt}
+
+
+            % =============================================
+            % AUTHORS / REVIEW MODE
+            % =============================================
+
+            \ifbubtreview
+
+                {\fontsize{10.5}{12}\selectfont
+                \bfseries
+                Anonymous Competition Submission
+                \par}
+
+                \vspace{2pt}
+
+                {\fontsize{9}{10.5}\selectfont
+                Paper ID: \bubt@paperid
+                \par}
+
+            \else
+
+                {\fontsize{10}{11.8}\selectfont
+                \@author
+                \par}
+
+            \fi
+
+            \vspace{8pt}
+
+        \end{center}
+
+    \end{@twocolumnfalse}
+
+}
+
+
+% =========================================================
+% MAKETITLE
+% =========================================================
+
+\renewcommand{\maketitle}{%
+
+    \twocolumn[\bubt@titleblock]
+
+}
+
+
+% =========================================================
+% NORMAL PAGE STYLE
+% =========================================================
+
+\pagestyle{fancy}
+
+\fancyhf{}
+
+\renewcommand{\headrulewidth}{0.30pt}
+\renewcommand{\footrulewidth}{0.30pt}
+
+\setlength{\headheight}{15pt}
+\setlength{\footskip}{18pt}
+
+
+% =========================================================
+% RUNNING HEADER
+% =========================================================
+
+\ifbubtreview
+
+    \fancyhead[L]{%
+        \fontsize{8}{9}\selectfont
+        Anonymous Submission
+    }
+
+    \fancyhead[R]{%
+        \fontsize{8}{9}\selectfont
+        \bubt@runningtitle
+    }
+
+\else
+
+    \fancyhead[L]{%
+        \fontsize{8}{9}\selectfont
+        \bubt@runningauthor
+    }
+
+    \fancyhead[R]{%
+        \fontsize{8}{9}\selectfont
+        \bubt@runningtitle
+    }
+
+\fi
+
+
+% =========================================================
+% NORMAL FOOTER
+% =========================================================
+
+\ifbubtreview
+
+    \fancyfoot[L]{%
+        \fontsize{8}{9}\selectfont
+        BUBT Research Graduate School
+    }
+
+    \fancyfoot[C]{%
+        \fontsize{8}{9}\selectfont
+        Paper ID: \bubt@paperid
+    }
+
+    \fancyfoot[R]{%
+        \fontsize{8}{9}\selectfont
+        \thepage
+    }
+
+\else
+
+    \fancyfoot[L]{%
+        \fontsize{8}{9}\selectfont
+        BUBT Research Graduate School
+    }
+
+    \fancyfoot[C]{}
+
+    \fancyfoot[R]{%
+        \fontsize{8}{9}\selectfont
+        \thepage
+    }
+
+\fi
+
+
+% =========================================================
+% FIRST PAGE STYLE
+% =========================================================
+%
+% Page 1 already contains the BUBT logo, university name,
+% paper title, and authors, so no running header is shown.
+% =========================================================
+
+\fancypagestyle{bubtfirstpage}{%
+
+    \fancyhf{}
+
+    \renewcommand{\headrulewidth}{0pt}
+    \renewcommand{\footrulewidth}{0.30pt}
+
+
+    % -----------------------------------------------------
+    % FIRST PAGE FOOTER
+    % -----------------------------------------------------
+
+    \fancyfoot[L]{%
+        \fontsize{8}{9}\selectfont
+        © BUBT Research Graduate School
+    }
+
+
+    \ifbubtreview
+
+        \fancyfoot[C]{%
+            \fontsize{8}{9}\selectfont
+            Paper ID: \bubt@paperid
+        }
+
+    \else
+
+        \fancyfoot[C]{}
+
+    \fi
+
+
+    \fancyfoot[R]{%
+        \fontsize{8}{9}\selectfont
+        \thepage
+    }
+
+}
+
+
+% =========================================================
+% DOCUMENT-WIDE SETTINGS
+% =========================================================
+
+\AtBeginDocument{%
+
+    \small
+
+    \setlength{\bibsep}{2pt}
+
+}
+
+
+% =========================================================
+% REVIEW MODE PDF METADATA
+% =========================================================
+
+\ifbubtreview
+
+    \AtBeginDocument{%
+
+        \@ifpackageloaded{hyperref}{%
+
+            \hypersetup{%
+                pdfauthor={Anonymous}
+            }%
+
+        }{}
+
+    }
+
+\fi
+
+
+% =========================================================
+% PAGE-LIMIT GUIDANCE
+% =========================================================
+
+\newcommand{\bubtpageguidance}{%
+
+    \begin{quote}
+
+    \small
+
+    Recommended length: 4--6 pages of main content.
+    References and appendices may be excluded from the
+    main page limit if permitted by the official competition
+    guidelines.
+
+    \end{quote}
+
+}
+
+
+% =========================================================
+% END INTERNAL COMMANDS
+% =========================================================
+
+\makeatother

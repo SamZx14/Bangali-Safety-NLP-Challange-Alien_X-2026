@@ -1,0 +1,225 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[final]{bubtcompetition}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx,booktabs,amsmath,amssymb,tabularx}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+\bubtpaperid{ALIEN\_X}
+\bubtteamname{ALIEN\_X}
+\bubttaskname{Fine-Grained Bengali Toxicity Understanding}
+\bubtrunningauthor{Leon et al.}
+\bubtrunningtitle{ALIEN\_X: Label-wise Ensembles for Bengali Safety}
+\title{ALIEN\_X at the BUBT Bengali NLP Safety Challenge 2026:\\Label-wise Ensembles for Fine-Grained Toxicity Understanding}
+\author{Sayem Islam Leon \quad Samira Ibrahim \quad Mohd. Mayasur Uddin Dip\\
+Department of Computer Science and Engineering\\
+Bangladesh University of Business and Technology (BUBT), Dhaka, Bangladesh\\
+\small\texttt{sayemislamleon@gmail.com}, \texttt{samira41104@gmail.com}\\
+\small\texttt{20244103094@cse.bubt.edu.bd}}
+\newcommand{\checkpoint}[1]{{\small\nolinkurl{#1}}}
+\begin{document}
+\normalsize
+\maketitle\thispagestyle{bubtfirstpage}
+\begin{abstract}
+We describe ALIEN\_X's V38 system for the BUBT Bengali NLP Safety Challenge 2026. The system predicts seven binary safety labels for Bengali and Banglish text by combining lexical classifiers, pretrained language models, and label-specific decision rules. Its final output retains four labels from an earlier ensemble and applies separate reranking methods to toxicity, implicit toxicity, and threats. On 500 labeled historical development examples, reconstructed predictions obtain an official weighted score of 0.646045. Positive-class F1 ranges from 0.3545 for sarcasm to 0.8745 for toxicity. The archived submission record reports a public score of 0.608 and a private score of 0.588 for V38. We distinguish these hidden-test aggregates from development metrics and from the better private result of a different submission. Error analysis shows that high sarcasm recall comes with many false positives, while rare labels remain difficult. Because development data were repeatedly used for model and decision-rule selection, the offline results are retrospective diagnostics rather than an unbiased generalization estimate. We document the ensemble, data provenance, evaluation procedure, and reproduction limits.
+\end{abstract}
+
+\section{Introduction}
+Harmful-language detection requires more than identifying offensive words. A text can express a threat without profanity, target a group indirectly, or use sarcasm to convey meaning that differs from its literal wording. Bengali content moderation also encounters Bengali script, romanized Bengali (Banglish), and mixed-script text. These characteristics motivate combining lexical evidence with contextual representations and examining each safety attribute separately.
+
+The BUBT Bengali NLP Safety Challenge 2026 formulates this problem as seven binary decisions per text. Our submission, V38, is a frozen ensemble assembled from an experimental sequence, not a single network trained end to end. It retains earlier predictions where they remain useful and changes the ranking or threshold for selected labels. Describing only its strongest neural encoder would omit much of the submitted decision procedure.
+
+This paper documents the components and label-specific rules defining V38, reports complete precision, recall, F1, and support for its historical development predictions, and distinguishes observed performance from methodological limitations. We provide a system description and retrospective analysis; we do not claim a new general-purpose architecture or an unbiased comparison against all competing systems.
+
+\section{Task Description}
+For an input text $x$, the system outputs $\hat{\mathbf y}\in\{0,1\}^7$. Labels are \texttt{is\_toxic}, \texttt{implicit\_toxicity}, \texttt{sarcasm}, \texttt{contains\_profanity}, \texttt{threatening}, \texttt{identity\_attack}, and \texttt{sexual\_content}. Several labels may be positive for one text. We evaluate the supplied annotations without adding a hierarchy that forces secondary predictions to agree with the toxicity prediction.
+
+The official metric implemented in the project is
+\begin{equation}
+ S=\tfrac12 F_{1,\mathrm{toxic}}^{\mathrm{macro}}
+ +\tfrac12\left(\tfrac16\sum_{j=1}^{6}F_{1,j}^{+}\right),
+ \label{eq:metric}
+\end{equation}
+where toxicity macro-F1 averages the non-toxic and toxic class F1 values, whereas $F_{1,j}^{+}$ evaluates the positive class of secondary label $j$. A simple mean of seven positive-class F1 values is a different measurement. Per-label precision, recall, and F1 below refer to class~1 unless explicitly stated otherwise.
+
+\section{Dataset and Provenance}
+\begin{table}[t]\centering\small
+\begin{tabular}{lrrr}\toprule
+Split & Texts & Duplicates$^*$ & Bengali script$^\dagger$\\\midrule
+Training & 3,297 & 717 & 2,650\\
+Development & 500 & 102 & 408\\
+Hidden test & 1,000 & 198 & 792\\\bottomrule
+\end{tabular}
+\caption{Historical V38-aligned data. $^*$Repeated text rows beyond the first occurrence, as counted in the artifact audit. $^\dagger$Texts containing Bengali-script characters, including mixed-script texts.}\label{tab:splits}
+\end{table}
+Table~\ref{tab:splits} describes the historical partition associated with the saved probabilities and submission. Each split has unique IDs. The artifact audit found no normalized-text overlap between training and development partitions. Repeated texts within splits are common, so row counts should not be interpreted as numbers of independent linguistic examples.
+
+Label frequencies are uneven (Table~\ref{tab:labels}). Toxicity is positive in 71.49\% of training rows, whereas threats account for 2.82\%. Development contains only 15 positive examples each for threats and implicit toxicity, making estimates sensitive to a few decisions.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{lrr}\toprule
+Label & Training positives & Dev. positives\\\midrule
+Toxicity & 2,357 & 353\\
+Implicit toxicity & 110 & 15\\
+Sarcasm & 566 & 88\\
+Profanity & 367 & 55\\
+Threatening & 93 & 15\\
+Identity attack & 1,379 & 211\\
+Sexual content & 159 & 24\\\bottomrule
+\end{tabular}
+\caption{Positive-label counts. Labels can overlap.}\label{tab:labels}
+\end{table}
+
+Later supplied assets contain a different 3,292-row training release. Only 55 of its 500 validation IDs and 198 of its 1,000 test IDs overlap with the historical probability files. Joining releases by row position would invalidate evaluation. All per-label results here use the historical labels and matching reconstructed predictions.
+
+The V35 component used five grouped folds over the combined 3,797 labeled rows. An audit found 2,978 normalized-text groups and no group spanning folds. This protects that assignment against duplicate groups crossing folds, but does not make the final development evaluation an untouched holdout. Component construction and later selection used these data in several ways.
+
+\section{Related Work}
+BanglaBERT provides pretrained representations and language-understanding benchmarks for Bangla \citep{banglabert}. It supplies the principal contextual model family in our earlier ensemble and several specialists. XLM-R learns multilingual representations at scale \citep{xlmr}; V38 incorporates earlier XLM-R outputs and a transliteration-adapted checkpoint in its toxicity branch. BGE-M3 supports multilingual text embeddings \citep{bgem3}; a Bengali-adapted checkpoint supplies features for our threat classifier.
+
+These works motivate representation choices rather than establish their contribution to our score. We do not transfer their published benchmark results to this task. Similarly, an experiment name identifies a saved prediction source, not an independently validated improvement in V38. Our analysis concerns the assembled submission's decisions.
+
+\section{System Overview and Methodology}
+\begin{figure*}[t]\centering
+\includegraphics[width=0.98\textwidth]{figures/architecture.pdf}
+\caption{V38 inference from saved component probabilities. Four attributes retain V14 decisions. Three other labels use separate reranking branches. Counts apply to the fixed 1,000-row historical test batch; they are not hidden-label frequencies.}\label{fig:architecture}
+\end{figure*}
+Figure~\ref{fig:architecture} summarizes the pipeline. Let $p_j^{(2)}$ denote the saved V2 probability and $p_j^{(14)}$ the V14 signal reconstructed from it and older snapshots. Before applying $\ell(p)=\log(p/(1-p))$, probabilities are clipped to $[10^{-5},1-10^{-5}]$. The logistic function is $\sigma$.
+
+\subsection{Lexical and contextual baseline}
+The saved V2 configuration selects \checkpoint{csebuetnlp/banglabert}, length 128, seed 42, learning rate $2\times10^{-5}$, and five epochs. Its probability ensemble weights BanglaBERT by 0.7 and a TF-IDF logistic-regression component by 0.3. The lexical pipeline uses word and character-within-word features with sublinear term frequency and per-label regularization. This branch contributes the frozen V2 arrays; it is not retrained during V38 assembly.
+
+Older \texttt{oldb} and \texttt{oldx} arrays supply BanglaBERT and XLM-R snapshot probabilities. Array indices below are zero-based. V14 toxicity combines $0.875p^{(2)}$ with 0.125 times the mean of older XLM-R snapshots 1 and 2. Its implicit signal is a 0.9/0.1 logit blend of V2 and the mean of older BanglaBERT snapshots. These dependencies distinguish V38 from the simpler saved V2 configuration.
+
+\subsection{Transliteration-adapted toxicity branch}
+V35 fine-tunes \checkpoint{aplycaebous/tb-XLM-R-fpt} using five folds and three epochs. It averages snapshots from epochs 2 and 3 and then fold predictions for the test set. Training uses script/label-weighted sampling and weighted multilabel binary cross-entropy. For logit $z_{ij}$ and positive weight $w_j$, the loss has the form
+\begin{equation}
+\mathcal L=-\frac{1}{7N}\sum_{i,j}\left[w_jy_{ij}\log\sigma(z_{ij})+
+(1-y_{ij})\log(1-\sigma(z_{ij}))\right].
+\end{equation}
+The final toxicity ranking signal is
+\begin{equation}
+q_{\mathrm{tox}}=\sigma\!\left(0.70\ell(p^{(14)}_{\mathrm{tox}})
++0.30\ell(p^{(35)}_{\mathrm{tox}})\right).
+\end{equation}
+V38 labels the 673 highest-scoring test texts toxic, preserving the V14 positive count. Development reconstruction retains 340 positives. This is a batch-level rank decision, not a calibrated 0.5 cutoff.
+
+\subsection{Implicit-toxicity meta reranking}
+The implicit branch inherits V36's logistic meta model. Features include saved per-label probabilities, their logits, toxicity-context probabilities, and nine text features: log character/word counts, Bengali/Latin character proportions, exclamation/question-mark counts, and three script-category indicators.
+
+Sources include MuRIL (V18), staged BanglaBERT and lexical outputs (V32), multilingual-E5 and Twitter-XLM-R (V33), V35 encoders, conditional attributes (V23), rare-label specialists (V15), and dedicated toxicity experts. Appendix~\ref{app:checkpoints} identifies checkpoint families. This branch therefore has broader dependencies than a compact three-family architecture sketch suggests.
+
+The reproduction notebook standardizes features and selects logistic-regression $C\in\{0.01,0.03,0.1,0.3\}$ using five-fold training-row out-of-fold average precision. The final meta classifier fits the 3,297 training rows. Its probability is blended with $p^{(14)}$ in logit space using $w\in\{0,0.2,0.4,0.6,0.8,1\}$. Development F1 selects the blend; fold-level wins/losses and changed test decisions break ties. It retains 70 positive test decisions and 28 development positives. The inspected summary does not preserve selected $C$ and $w$, so we report the search procedure without inventing fixed values.
+
+\subsection{Threat specialist}
+Threat scores use \checkpoint{nahidstaq/bge-m3-bangla} embeddings and five logistic-regression classifiers. The recorded configuration uses \texttt{liblinear}, $C=0.35$, and positive-example weighting capped at 3. Test probabilities are combined across folds. The final rule selects 32 test positives and 16 development positives. The branch addresses a rare label, although available evidence does not isolate a statistically reliable causal benefit of this model family.
+
+\subsection{Retained attributes and assembly}
+Four attributes retain V14 decisions. Sarcasm uses $p^{(2)}\geq0.175$; sexual content uses $p^{(2)}\geq0.245$. Profanity uses $0.95p^{(2)}+0.05p^{(\mathrm{oldb},0)}\geq0.245$. Identity attack uses $0.70p^{(2)}+0.30p^{(\mathrm{oldb},2)}\geq0.3814$. V38 takes the V36 target system and reverts profanity to V14. This changes 48 test profanity decisions and no other label relative to V36. That ablation, rather than a newly trained backbone, defines V38.
+
+\section{Experimental Setup}
+\begin{table}[t]\centering\small
+\begin{tabular}{ll}\toprule
+V35 setting & Recorded value\\\midrule
+Maximum sequence length & 128\\
+Folds / epochs & 5 / 3\\
+Prediction snapshots & Epochs 2 and 3\\
+Batch size / accumulation & 4 / 4\\
+Optimizer & AdamW\\
+Backbone / head LR & $1.2\times10^{-5}$ / $2.5\times10^{-5}$\\
+Weight decay / warmup & 0.01 / 0.10\\
+Fold seeds & 2026, 17, 3407, 1337, 42\\\bottomrule
+\end{tabular}
+\caption{V35 neural-component settings, not a universal configuration for every ensemble member.}\label{tab:setup}
+\end{table}
+The authors report training in Google Colab with an NVIDIA T4 GPU. Notebooks use Python, PyTorch, Hugging Face Transformers, Sentence Transformers, NumPy, pandas, and scikit-learn. Complete software versions, peak memory, and total training time were not retained in the inspected artifacts; we do not estimate them. Table~\ref{tab:setup} gives V35 settings. V2 and meta-model configurations are reported separately because the ensemble spans several runs.
+
+Evaluation uses the supplied reconstructed V38 predictions and matching labels for 500 unique IDs. We recompute confusion counts and derive precision, recall, and F1, confirming the supplied metrics without neural retraining. The supplied reconstruction report also states that all test predictions match the frozen CSV. Earlier independent artifact checks reproduce six test columns exactly; we have not independently retrained every component. Reproducing saved decisions is distinct from reproducing training from raw data and pretrained weights.
+
+\section{Results}
+\begin{table*}[t]\centering\small
+\begin{tabular}{lrrrrrrr}\toprule
+Label & Precision & Recall & F1 (positive) & Support & TP & FP & FN\\\midrule
+Toxicity & 0.8912 & 0.8584 & 0.8745 & 353 & 303 & 37 & 50\\
+Implicit toxicity & 0.2857 & 0.5333 & 0.3721 & 15 & 8 & 20 & 7\\
+Sarcasm & 0.2195 & 0.9205 & 0.3545 & 88 & 81 & 288 & 7\\
+Profanity & 0.4889 & 0.8000 & 0.6069 & 55 & 44 & 46 & 11\\
+Threatening & 0.3750 & 0.4000 & 0.3871 & 15 & 6 & 10 & 9\\
+Identity attack & 0.5649 & 0.8246 & 0.6705 & 211 & 174 & 134 & 37\\
+Sexual content & 0.5556 & 0.6250 & 0.5882 & 24 & 15 & 12 & 9\\\bottomrule
+\end{tabular}
+\caption{Reconstructed V38 results on 500 historical development rows. Support counts actual positives. These are diagnostics after repeated selection, not hidden-test per-label metrics.}\label{tab:metrics}
+\end{table*}
+\subsection{Development performance}
+Table~\ref{tab:metrics} reports all seven labels. Toxicity has the highest positive-class F1 (0.8745), but the non-toxic class has precision 0.6875, recall 0.7483, and F1 0.7166. The official toxicity contribution is therefore macro-F1 0.795536, not 0.8745. The mean secondary F1 is 0.496555, producing $S=0.646045$.
+
+Historical recomputation gives official development scores of 0.618395 for V2 and 0.634443 for V14. V38 is higher than V14 by 0.011602, but repeated development-set reuse prevents treating the difference as an unbiased gain. V2's stored 0.524851 is the mean of seven positive-class F1 values. It is neither V38's score nor the official weighted V2 score.
+
+\begin{figure}[t]\centering
+\includegraphics[width=\columnwidth]{figures/label_metrics.pdf}
+\caption{Precision and recall show different error balances across labels. All values use the same development rows.}\label{fig:metrics}
+\end{figure}
+\subsection{Archived competition results}
+\begin{table}[t]\centering\small
+\begin{tabular}{lrr}\toprule
+Submission & Public score & Private score\\\midrule
+V36 (T595) & 0.606 & 0.588\\
+V37 (TD) & 0.605 & 0.585\\
+V38 (NO\_PN) & \textbf{0.608} & 0.588\\
+V39 (NO\_TN) & 0.607 & \textbf{0.591}\\\bottomrule
+\end{tabular}
+\caption{Rounded scores from the supplied Kaggle submission screenshot. The authors identify the public/private column roles. Test labels are unavailable.}\label{tab:leaderboard}
+\end{table}
+V38 has the highest public score among the four archived candidates in Table~\ref{tab:leaderboard}; V39 has the highest private score. The inspected V39 artifact changes 36 toxicity decisions relative to V38 and leaves other labels unchanged. Thus, 0.591 must not be attributed to V38. These are rounded submission-level scores, not per-label test measurements or a claim of overall competition victory.
+
+The V36-to-V38 profanity reversion coincides with a public change from 0.606 to 0.608 while the rounded private score stays 0.588. This is a narrow artifact-level ablation, not proof that every such reversion improves generalization. It does not isolate effects of entire model families. Repeated public-score selection can itself adapt decisions to the public subset.
+
+\section{Error Analysis}
+Sarcasm detects 81 of 88 positives (recall 0.9205) but makes 288 false-positive predictions. Its 369 positive predictions cover 73.8\% of development rows, whereas 17.6\% are labeled sarcastic. The 0.175 cutoff is consistent with a recall-heavy operating point. A controlled threshold study on fresh data is needed before selecting a replacement operating point.
+
+Identity attack is the strongest secondary attribute by F1 (0.6705), with 174 true positives and 134 false positives. Profanity has 44 true positives and 46 false positives; its recall of 0.8000 alone does not imply reliable positive predictions. Sexual content has a more balanced precision--recall profile, supported by only 24 positive examples.
+
+Implicit toxicity finds 8 of 15 positives with 20 false positives. Threat detection finds 6 of 15 positives and misses 9. One additional correct positive changes recall by approximately 0.0667 for either label. Small apparent changes therefore require caution. Toxicity misses 50 positive examples and flags 37 non-toxic examples. Its lower non-toxic F1 explains the gap between positive-class F1 and the official macro-F1.
+
+These are aggregate error counts, not a qualitative annotation study. We do not infer that mistakes are caused by code mixing, irony, or spelling variation without inspecting and annotating the affected examples. Figure~\ref{fig:metrics} instead supports the narrower conclusion that different labels have different precision--recall balances.
+
+\section{System Submission and Reproducibility}
+The analyzed artifact is \texttt{submission\_v38\_NO\_PN.csv}, associated with ALIEN\_X. It contains 1,000 unique IDs and seven binary columns. Positive counts in task-label order are 673, 70, 715, 180, 32, 618, and 63. The three rank-based counts are decision constraints, not frequencies obtained from hidden ground truth.
+
+The local archive preserves notebooks, prediction arrays, evaluation files, and the frozen CSV. No public code-release URL was provided, so we do not claim an existing public release. Our supplement includes a metric-reproduction script and provenance manifest. Checkpoint identifiers are documented, but historical revisions and all weight hashes were not pinned. The exact fitted implicit meta model and selected blend parameters are not preserved in the inspected summary. V36's reproduction notebook describes refitting it from saved sources; that is weaker than retaining the fitted model and its environment.
+
+\section{Limitations}
+Validation reuse is the principal limitation. Some sources were generated through folds of combined training/development data; the development set later influenced thresholds, blend weights, and candidate selection. Even if a row's neural output is out of fold, stacking and repeated selection can introduce dependencies that ordinary holdout analysis does not capture. The 0.646045 diagnostic should not be used to forecast deployment accuracy.
+
+Fixed-count decisions depend on batch composition. The top-673 rule cannot be applied unchanged to an arbitrary-sized stream and may fail under prevalence shift. Deployment would require separately validated thresholds or calibrated decision policies. Repeated texts and sparse positive labels further restrict the strength of conclusions.
+
+We have no independently annotated error taxonomy, demographic fairness study, deployment evaluation, or uncertainty estimate accounting for duplicate groups. Missing software versions and unpinned checkpoints limit exact retraining. These constraints preclude claims about broad safety, fairness, or stable performance outside the competition.
+
+\section{Ethical Considerations and Disclosures}
+False positives can suppress benign speech, while false negatives leave harmful content unreviewed. The sarcasm false-positive count makes automatic punitive moderation inappropriate without further evaluation. Predictions should support human review, with an appeal process and validation for the intended context. We omit raw harmful texts and private user information.
+
+Based on notebooks and the authors' account, no evidence was found of external labeled examples added to V38, LLM-generated synthetic examples, or LLM annotation or test labeling. Public pretrained models had been pretrained on external corpora; this differs from adding supervised task examples. No retrieval index appears in recovered final inference. External pretraining data of all checkpoint adaptations were not independently audited.
+
+The authors report ChatGPT assistance with Python development/review, experimental design, evaluation, and pipeline optimization. AI assistance also supported manuscript drafting and figure preparation. Numerical claims remain grounded in supplied records and recomputed counts. No new neural training or leaderboard submission was performed for this paper.
+
+\section{Conclusion}
+V38 combines lexical and contextual signals with label-specific decision rules. Toxicity has its strongest development F1, while identity attack leads the secondary attributes. Error counts show why an aggregate score is insufficient: high sarcasm recall comes with many false alarms, and rare labels remain uncertain. The public score of 0.608 is an archived competition outcome; the detailed analysis describes a reused development set. Future work should reserve fresh evaluation data, reduce false positives without losing useful recall, and replace fixed batch counts with validated decision policies. Preserving checkpoint revisions, environments, and selected ensemble parameters is also necessary for reproducibility.
+
+\section*{Acknowledgments}
+We thank our supervisor, Md. Darun Nayeem, the BUBT Bengali NLP Safety Challenge organizers, and the researchers who released the pretrained models used in this work.
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\appendix
+\section{Checkpoint and Artifact Inventory}\label{app:checkpoints}
+The identifiers below describe recovered notebook dependencies. They do not imply that every checkpoint was directly blended into every final label or that current weights reproduce historical ones.
+\begin{itemize}
+\item \checkpoint{csebuetnlp/banglabert}: baseline, older snapshots, attribute specialists, staged models, and toxicity context.
+\item \checkpoint{xlm-roberta-base}: earlier multilingual and toxicity branches.
+\item \checkpoint{google/muril-base-cased}: V18 multilabel probabilities.
+\item \checkpoint{microsoft/mdeberta-v3-base}: V19 toxicity context.
+\item \checkpoint{csebuetnlp/banglabert_large}: V25 toxicity context.
+\item \checkpoint{intfloat/multilingual-e5-base} and \checkpoint{cardiffnlp/twitter-xlm-roberta-base}: V33 sources.
+\item \checkpoint{kazalbrur/bangla-embed-e5-small-banglish}, \checkpoint{nahidstaq/bge-m3-bangla}, and \checkpoint{aplycaebous/tb-XLM-R-fpt}: V35 sources.
+\end{itemize}
+The frozen V38 CSV has SHA-256 \nolinkurl{17679bdcf8514ada3e6c2bb430f8d2f5a460dd433a055e54580830b3b9858f10}. The supplement distinguishes recomputed, reported, and unverified claims. Metric reproduction requires IDs, binary labels, and predictions, so raw toxic texts need not be redistributed.
+\end{document}
