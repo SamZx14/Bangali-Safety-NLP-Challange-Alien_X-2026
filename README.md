@@ -1,16 +1,33 @@
-# Bengali NLP Safety Challenge 2026 — ALIEN_X
+# ALIEN_X · Bengali NLP Safety Challenge 2026
 
-Fine-grained Bengali toxicity detection using machine learning, pretrained language models, and label-specific ensembles.
+**Fine-grained Bengali toxicity detection with lexical models, pretrained transformers, and label-specific ensembles.**
 
-This repository documents **Team ALIEN_X’s** experiments for the **Bengali NLP Safety Challenge 2026**, including training notebooks, saved predictions, submission files, and a reproducibility audit of the historical V38 system.
+[Explore the Notebooks](https://github.com/SamZx14/Bangali-Safety-NLP-Challange-Alien_X-2026/tree/main/NoteBooks) · [Final Audit](https://github.com/SamZx14/Bangali-Safety-NLP-Challange-Alien_X-2026/blob/main/Final/NLP_02_Alien_x.ipynb) · [Submission Archive](https://github.com/SamZx14/Bangali-Safety-NLP-Challange-Alien_X-2026/tree/main/csv)
+
+---
 
 ## Overview
 
-Bengali online comments can contain Bengali script, Romanized Bengali, and mixed-language text. This project explores complementary modeling approaches to predict overall toxicity and six related attributes.
+This repository documents **Team ALIEN_X’s** work for the **Bengali NLP Safety Challenge 2026: Fine-Grained Bengali Toxicity Understanding**.
 
-Each comment receives seven binary predictions:
+The project explores how lexical features, contextual language models, and ensemble methods can identify toxicity across Bengali, Romanized Bengali, and mixed-language comments. It preserves the experiment history—from TF–IDF baselines to transformer ensembles and label-specific specialists—alongside prediction files, result archives, and reproducibility checks.
 
-| Label | Prediction target |
+**Project highlights**
+
+- Seven binary prediction targets covering overall toxicity and related attributes.
+- TF–IDF and BanglaBERT ensemble baselines.
+- Cross-script modeling and embedding-based classifiers.
+- Label-specific blending, thresholds, and ranking rules.
+- Historical V38 submission with a **reported public leaderboard score of approximately 0.608**.
+- A dedicated audit notebook for checking dataset-version compatibility.
+
+> **Repository status:** This is an experimental research archive. Individual notebooks can depend on version-specific datasets, cached predictions, or earlier experiment outputs.
+
+## The Task
+
+For each input comment, the system predicts seven binary labels:
+
+| Label | Target |
 |---|---|
 | `is_toxic` | Overall toxicity |
 | `implicit_toxicity` | Implicit toxicity |
@@ -20,101 +37,114 @@ Each comment receives seven binary predictions:
 | `identity_attack` | Identity-directed attacks |
 | `sexual_content` | Sexual content |
 
-The labels follow the competition’s annotations. They are separate prediction targets; the presence of an attribute should not automatically be treated as proof of overall toxicity.
+Each target is evaluated according to the competition’s annotations. Attribute predictions are separate outputs; sarcasm, identity mentions, or sexual content should not automatically be interpreted as overall toxicity.
 
 ## Modeling Approach
 
-The experiment history includes:
+The project investigates complementary sources of predictive information:
 
-- **TF–IDF and logistic regression** for lexical baselines.
-- **BanglaBERT** for contextual Bengali text representations.
-- **Transliteration-oriented transformer models** for cross-script inputs.
-- **Frozen Bengali sentence embeddings with linear classifiers**.
-- **Label-specific probability and logit blending**.
-- **Threshold selection and ranking-based decisions**.
-- **Specialist experiments** targeting individual attributes.
+| Component | Role |
+|---|---|
+| **TF–IDF + logistic regression** | Capture lexical patterns and provide a classical baseline |
+| **BanglaBERT** | Learn contextual representations of Bengali comments |
+| **Transliteration-oriented transformer experiments** | Explore Bengali, Romanized, and mixed-script inputs |
+| **Frozen Bengali embeddings + linear classifiers** | Add semantic features without fully fine-tuning the embedding model |
+| **Label-specific ensembles** | Combine selected predictions differently for each target |
+| **Thresholds and ranking rules** | Convert scores into binary decisions |
 
-The historical V38 system combines selected outputs from earlier experiments. It is a label-specific ensemble assembled from trained models and cached predictions.
+### Historical V38 System
 
-## Repository Structure
+V38 combines selected outputs from earlier experiments. Its components include a BanglaBERT/TF–IDF baseline, historical model predictions, cross-script transformer scores, and embedding-based classifiers.
+
+Different labels use different combinations and decision rules. Reproducing V38 therefore requires the corresponding historical inputs and intermediate artifacts, rather than running a single newly trained model.
+
+Later notebooks explore sarcasm, identity-attack and sexual-content specialists, full-data refitting, frozen embedding ensembles, R-Drop, Mixout, and transfer learning. Their version numbers identify experiments; they do not imply steadily improving performance.
+
+## Repository Guide
 
 ```text
-.
-├── Data Sets/
-│   ├── train.csv
-│   ├── validation.csv
-│   ├── test.csv
-│   ├── sample_submission.csv
-│   └── bengali-nlp-safety-challenge-2026/
-│       └── Improve_*.csv
-├── Final/
-│   ├── NLP_02_Alien_x_Sayem_Islam_Leon.ipynb
+Bangali-Safety-NLP-Challange-Alien_X-2026/
+│
+├── Data Sets/                 # Dataset files and alternate packaged data
+├── Data zip/                  # Archived data bundles
+│
+├── NoteBooks/                 # Baselines and versioned experiments
+│   ├── starter_kit.ipynb
+│   ├── bengali_nlp_safety_colab_ready_v2.ipynb
+│   ├── bengali_nlp_safety_colab_ready_v35_LIVE_crossscript.ipynb
+│   └── ...
+│
+├── Final/                     # Final documentation and audit artifacts
+│   ├── NLP_02_Alien_x.ipynb
 │   ├── My final best submission is V38.docx
-│   └── ... packaged final artifacts
-├── NoteBooks K/
-│   └── bengali_nlp_safety_v17_kaggle_dual_gpu.ipynb
-├── Resources/
-│   ├── Class_1_Bengali_NLP_Toxicity_TFIDF.ipynb
-│   └── ... reference materials
-├── csv/
-│   └── ... versioned submission files
-├── bengali_nlp_safety_*.ipynb
-├── starter_kit.ipynb
-├── optimized_v2_config.json
-├── validation_ensemble_probabilities_v2.csv
-├── test_ensemble_probabilities_v2.csv
-└── ... experiment data and result archives
+│   └── ...
+│
+├── Resources/                 # TF–IDF tutorial and reference materials
+├── csv/                       # Submission files and saved probabilities
+├── json/                      # Saved configuration files
+│   └── optimized_v2_config.json
+│
+├── Results 1/                 # Archived experiment outputs
+├── Results 2/
+├── Results 3/
+├── Results 4/
+├── Results 4.1/
+├── Results 4.2/
+├── Results 4.3/
+├── Results 5/
+│
+└── README.md
 ```
+
+### Where to Start
+
+| Goal | File |
+|---|---|
+| Understand the competition workflow | `NoteBooks/starter_kit.ipynb` |
+| Explore the classical baseline | `Resources/Class_1_Bengali_NLP_Toxicity_TFIDF.ipynb` |
+| Study the early ensemble | `NoteBooks/bengali_nlp_safety_colab_ready_v2.ipynb` |
+| Inspect cross-script modeling | `NoteBooks/bengali_nlp_safety_colab_ready_v35_LIVE_crossscript.ipynb` |
+| Explore the Kaggle dual-GPU variant | `NoteBooks/bengali_nlp_safety_v17_kaggle_dual_gpu.ipynb` |
+| Check dataset and historical-artifact compatibility | `Final/NLP_02_Alien_x.ipynb` |
+| Inspect saved baseline settings | `json/optimized_v2_config.json` |
+
+> The notebook in `Final/` is a **reproducibility audit**. It checks dataset contracts and historical artifacts; it does not train V38 or generate a new competition submission.
 
 ## Getting Started
 
-### 1. Clone the repository
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/SamZx14/Bangali-Safety-NLP-Challange-Alien_X-2026.git
 cd Bangali-Safety-NLP-Challange-Alien_X-2026
 ```
 
-### 2. Choose a notebook
+### 2. Choose an Environment
 
-| Purpose | Starting point |
-|---|---|
-| Explore the task | `starter_kit.ipynb` |
-| Study the TF–IDF baseline | `Resources/Class_1_Bengali_NLP_Toxicity_TFIDF.ipynb` |
-| Explore the early ensemble workflow | `bengali_nlp_safety_colab_ready_v2.ipynb` |
-| Inspect cross-script experiments | `bengali_nlp_safety_colab_ready_v35_LIVE_crossscript.ipynb` |
-| Run the Kaggle dual-GPU variant | `NoteBooks K/bengali_nlp_safety_v17_kaggle_dual_gpu.ipynb` |
-| Audit dataset compatibility and historical artifacts | `Final/NLP_02_Alien_x_Sayem_Islam_Leon.ipynb` |
+Use **Google Colab**, **Kaggle Notebooks**, or a compatible local **Jupyter** environment.
 
-**The notebook in `Final/` performs a reproducibility audit. It does not train the V38 model or generate a new competition submission.**
+For transformer experiments:
 
-### 3. Prepare the environment
+- Enable a GPU.
+- Follow the selected notebook’s installation and setup cells.
+- Check its required datasets, model downloads, and cached artifacts.
+- Update paths for your runtime.
+- Supply your own credentials when downloading competition data.
 
-Open the selected notebook in **Google Colab**, **Kaggle Notebooks**, or a compatible local Jupyter environment.
+Dependencies and hardware requirements vary across experiments. The repository does not currently provide a single pinned environment for every notebook.
 
-- Follow the notebook’s dependency and setup cells.
-- Enable a GPU for transformer training.
-- Update dataset, cache, and output paths for your environment.
-- Supply any historical prediction files or archives required by that version.
-- Use your own credentials if the notebook downloads competition data.
+### 3. Configure the Data Paths
 
-These notebooks represent different experiments and may require different dependencies and input artifacts.
-
-### 4. Prepare the data
-
-Training and validation files use the following columns:
+The standard dataset filenames are:
 
 ```text
-ID,text,is_toxic,implicit_toxicity,sarcasm,contains_profanity,threatening,identity_attack,sexual_content
+train.csv
+validation.csv
+test.csv
+sample_submission.csv
 ```
 
-Test files contain:
-
-```text
-ID,text
-```
-
-Set the notebook’s data directory to the intended dataset release. For example, when running from the repository root:
+Set the selected notebook’s data path to the appropriate release. For example, when the working directory is the repository root:
 
 ```python
 from pathlib import Path
@@ -122,62 +152,122 @@ from pathlib import Path
 DATA_DIR = Path("Data Sets")
 ```
 
-Check the selected notebook’s path configuration before running subsequent cells.
+When the working directory is `NoteBooks/`, the corresponding relative path is:
 
-### 5. Run the workflow
+```python
+DATA_DIR = Path("../Data Sets")
+```
 
-Execute the notebook cells in order to load data, prepare features, train or load the required models, evaluate predictions, and export outputs where supported.
+Some notebooks use Colab, Kaggle, or archive-specific paths. Review their configuration cells before execution.
 
-Some later notebooks depend on cached results from earlier experiments. Review their input requirements before starting a run.
+### 4. Run the Selected Workflow
 
-## Evaluation Metric
+Execute notebook cells in order:
 
-The competition score combines overall toxicity performance with performance across the six attributes:
+1. Install and import the required packages.
+2. Load the correct dataset release.
+3. Validate the schema and IDs.
+4. Prepare features and train or load models.
+5. Evaluate validation predictions where supported.
+6. Apply the experiment’s ensemble and decision rules.
+7. Export predictions in the required submission format.
+
+For experiments that consume earlier outputs, prepare those artifacts before running dependent cells.
+
+## Data Format
+
+Labeled training and validation files contain:
+
+```text
+ID
+text
+is_toxic
+implicit_toxicity
+sarcasm
+contains_profanity
+threatening
+identity_attack
+sexual_content
+```
+
+Unlabeled test files contain:
+
+```text
+ID
+text
+```
+
+### Dataset Versions Matter
+
+The project includes artifacts associated with different releases:
+
+| Release context | Training rows | Validation rows | Test rows |
+|---|---:|---:|---:|
+| Historical V38-aligned release | 3,297 | 500 | 1,000 |
+| Later package checked by the final audit | 3,292 | 500 | 1,000 |
+
+The final audit documents different test-ID sequences for these releases. Matching row counts do not establish compatibility.
+
+Before combining datasets, probabilities, or submissions:
+
+- Verify the dataset release.
+- Match predictions using the correct IDs.
+- Confirm ID ordering and label-column order.
+- Run the relevant audit assertions.
+- Check any required hashes or artifact-specific expectations.
+
+**Never copy historical predictions onto a different test set by row position.** Predictions for another release must be generated for that release’s actual examples.
+
+## Evaluation
+
+The competition score gives equal total weight to overall toxicity and the six remaining attributes:
 
 ```text
 Score = 0.5 × MacroF1(is_toxic)
       + 0.5 × Mean(positive-class F1 across the six attributes)
 ```
 
-- Overall toxicity contributes **50%** of the score.
-- Each remaining attribute contributes **1/12** of the total.
-- Attribute F1 is computed across all evaluation rows.
+| Component | Contribution |
+|---|---:|
+| Macro-F1 for `is_toxic` | 50% |
+| Positive-class F1 for each remaining attribute | 8⅓% |
 
-This differs from ordinary seven-label macro-F1, micro-F1, and accuracy.
+Toxicity macro-F1 averages F1 across the negative and positive classes. Each attribute uses positive-class F1 across all evaluation rows.
 
-## Historical V38 Result
+This metric differs from ordinary seven-label macro-F1, micro-F1, and accuracy. Comparisons should use the same scoring function and dataset release.
 
-The project records **V38** as its selected historical submission, with a **reported public leaderboard score of approximately 0.608**.
+## Results and Configuration
 
-This is a historical reported result, not an independently reproduced score or a verified private leaderboard result. Later version numbers identify additional experiments and do not necessarily indicate better performance.
+### Historical V38 Result
 
-Exact reproduction depends on the original dataset release, cached predictions, fitted components, and decision rules.
+| Item | Status |
+|---|---|
+| Selected historical submission | V38 |
+| Reported public leaderboard score | Approximately **0.608** |
+| Independent reproduction of that score | Not established |
+| Private leaderboard result | Not verified here |
 
-## Dataset Versions and Reproducibility
+The reported score describes the historical competition submission. It should not be interpreted as performance on another dataset release or as a general deployment benchmark.
 
-The repository contains artifacts associated with different dataset releases. The final audit notebook distinguishes:
+### Saved V2 Baseline Configuration
 
-| Dataset context | Training rows | Validation rows | Test rows |
-|---|---:|---:|---:|
-| Historical V38 release | 3,297 | 500 | 1,000 |
-| Later package checked by the audit | 3,292 | 500 | 1,000 |
+The saved configuration in `json/optimized_v2_config.json` records:
 
-**Equal test-set sizes do not imply identical examples or IDs.**
+| Setting | Value |
+|---|---|
+| Transformer | `csebuetnlp/banglabert` |
+| Random seed | `42` |
+| Maximum sequence length | `128` |
+| Learning rate | `2e-5` |
+| Training epochs | `5` |
+| Transformer ensemble weight | `0.70` |
+| TF–IDF ensemble weight | `0.30` |
 
-Before evaluating or combining artifacts:
-
-1. Confirm that the dataset and predictions belong to the same release.
-2. Verify IDs and their ordering.
-3. Check label names and column order.
-4. Run the relevant audit checks.
-
-Historical predictions must not be copied onto another release by row position. A new release requires predictions generated for that release’s exact test examples.
-
-The audit also expects specific historical filenames. Do not assume differently named submission files are equivalent without checking their contents and IDs.
+These settings describe the saved **V2 baseline**. They are not the complete V38 configuration. The configuration’s `validation_macro_f1` field should also not be treated as the official competition score without confirming how it was calculated.
 
 ## Submission Format
 
-Submission files must contain an `ID` column followed by seven binary prediction columns:
+A submission contains the test IDs followed by seven binary prediction columns:
 
 ```csv
 ID,is_toxic,implicit_toxicity,sarcasm,contains_profanity,threatening,identity_attack,sexual_content
@@ -185,25 +275,44 @@ example_001,1,0,0,1,0,0,0
 example_002,0,0,0,0,0,0,0
 ```
 
-The rows above are illustrative. Use the exact IDs and ordering required by the corresponding sample submission.
+These rows are illustrative. Use the exact IDs and ordering from the relevant sample submission.
 
-## Limitations
+Before submission, confirm:
 
-- Historical experiment artifacts may be required to reproduce particular versions.
-- Repeated validation use can make development scores optimistic.
-- Rare labels and subjective annotations complicate evaluation.
-- Competition results do not establish performance in other domains.
+- The column names and order match the sample submission.
+- Every required test ID appears exactly once.
+- Predictions contain only `0` and `1`.
+- No values are missing.
+- The predictions belong to the intended dataset release.
 
-This repository is intended for competition research and experimentation. Real-world moderation use requires additional evaluation and human oversight.
+The archive includes `csv/submission_v38_NO_PN.csv`, while the audit expects a historical artifact named `submission_v38_NO_PROFANITY_ABLATION.csv`. Verify their contents and provenance before treating them as equivalent.
+
+## Reproducibility and Limitations
+
+This repository preserves development history, but exact reproduction of every experiment is not guaranteed.
+
+- Some notebooks depend on cached predictions, archives, or fitted components from earlier runs.
+- Historical pretrained-model revisions and environments may not be fully pinned.
+- Repeated validation use can make development results optimistic.
+- Rare attributes and annotation disagreement complicate evaluation.
+- Public leaderboard performance does not establish generalization to other platforms, topics, or communities.
+
+For a new experiment, record the dataset version, notebook version, dependencies, random seeds, model revisions, decision thresholds, and output hashes.
+
+## Responsible Use
+
+This project supports research into Bengali online safety. Model predictions can be affected by context, dialect, spelling variation, code-mixing, and annotation choices.
+
+Use additional evaluation and human review before applying the models to consequential moderation decisions. Dataset access and redistribution must follow the competition’s terms, and external models and resources retain their respective licenses.
 
 ## Acknowledgments
 
-Thanks to the Bengali NLP Safety Challenge 2026 organizers and the researchers and maintainers behind the datasets, pretrained models, and open-source libraries used in these experiments.
+Developed by **Team ALIEN_X** for the **Bengali NLP Safety Challenge 2026**.
 
-## Usage and Licensing
+Thanks to the competition organizers, dataset contributors, and the researchers and maintainers behind the pretrained models and open-source tools used throughout the project.
 
-Follow the competition’s rules for dataset access, use, and redistribution, and check the licenses of individual pretrained models and external resources.
+## License
 
-No repository-level license is currently included.
+No repository-level license is currently included. Consult the repository owner for reuse permissions and review the applicable terms for datasets, pretrained models, and third-party resources separately.
 
 © Samira Ibrahim. All rights reserved.
